@@ -84,7 +84,7 @@ def upload(bucket_name,source_path):
         return False
   
 
-art = pyfiglet.figlet_format("AWS S3 HOST",font="slant")
+art = pyfiglet.figlet_format("AWS S3 WEB HOST",font="slant")
 print(art)
 
 bucket_name = input("Enter a bucket name: ")
