@@ -82,7 +82,76 @@ def upload(bucket_name,source_path):
         return True
     except:
         return False
-  
+
+
+def createCDN(bucket_name,index,directory_location):
+    try:
+        client = boto3.client('cloudfront')
+        response = client.create_distribution(
+            DistributionConfig={
+                'CallerReference': "initialAttempt",
+                'DefaultRootObject': index,
+                'Origins': {
+                    'Quantity': 1,
+                    'Items': [
+                        {
+                            'Id': '1',
+                            'DomainName': bucket_name+'.s3.amazonaws.com',
+                            'OriginPath': directory_location,
+                            'S3OriginConfig': {
+                                'OriginAccessIdentity': ''
+                            }
+                        }
+                    
+                    ]
+                
+                },
+                'DefaultCacheBehavior': {
+                    'TargetOriginId': '1',
+                    'ForwardedValues': {
+                        'QueryString': False,
+                        'Cookies': {
+                            'Forward': 'none'
+                        }
+                    
+                    },
+                    'ViewerProtocolPolicy': 'allow-all',
+                    'MinTTL': 0,
+                    'AllowedMethods': {
+                        'Quantity': 2,
+                        'Items': [
+                            'GET','HEAD'
+                        ],
+                        'CachedMethods': {
+                            'Quantity': 2,
+                            'Items': [
+                                'GET','HEAD'
+                            ]
+                        }
+                    },
+                    'TrustedSigners': {
+                        'Enabled': False,
+                        'Quantity': 0,
+                        'Items': []
+                    },
+                    'SmoothStreaming': False,
+                    'DefaultTTL': 86400,
+                    'MaxTTL': 31536000,
+                    'Compress': False
+                
+                },
+            
+                'Comment': 'This is a minimal cloudfront configuration to improve the load time of a Website!',
+                'PriceClass': 'PriceClass_All',
+                'Enabled': True,
+                'HttpVersion': 'http2',
+                'IsIPV6Enabled': True
+            }
+        )
+        return True
+    except:
+        return False
+
 
 art = pyfiglet.figlet_format("AWS S3 WEB HOST",font="slant")
 print(art)
@@ -131,7 +200,26 @@ prGreen("Folder Upload Successful, Your Static Website is now Live!\n")
 
 prGreen("Website URL: http://"+bucket_name+".s3-website."+region+".amazonaws.com/<Location-of-your-index-file-in-Local-Directory>\n")
 
-prGreen("Process Complete.")
+
+
+print("Would you like your website to load superfast all around the globe?")
+response = input("[y/n] Press y to continue, n to exit. : ")
+if response=='y' or response=='Y':
+    directory_location = input("Enter the File Path where Index file is located(Don't put a slash at the end): ")
+    flag = False
+    while(not createCDN(bucket_name,index,directory_location)):
+        prRed("There was some error configuring your CDN :( ,trying again in 2 seconds...")
+        t=2
+        time.sleep(t)
+        directory_location = input("Enter the File Path where Index file is located(Don't put a slash at the end): ")
+    prGreen("CDN Configured Properly, Effect may be seen in 20-30 minutes.")
+    prGreen("Process Complete.")    
+elif response=='n' or response=='N':
+    prGreen("Process Complete.")
+else:
+    prRed("Invalid key Pressed! Dumping Process.")
+
+
 
 
 
